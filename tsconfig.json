@@ -1,12 +1,9 @@
 {
-    "compilerOptions": {
-      "target": "ES2020",
-      "module": "commonjs",
-      "esModuleInterop": true,
-      "forceConsistentCasingInFileNames": true,
-      "strict": true,
-      "skipLibCheck": true,
-      "outDir": "./js",
-      "rootDir": "src"
-    }
+	"compilerOptions": {
+		"target": "es2015",
+		"module": "es2015",
+		"strict": true,
+		"outDir": "./js",
+		"rootDir": "src"
+	}
 }

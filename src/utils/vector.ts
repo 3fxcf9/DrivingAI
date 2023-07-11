@@ -1,4 +1,4 @@
-import { canvasArrow } from "./utils/canvasArrow.js";
+import { canvasArrow } from "./canvasArrow.js";
 
 export class Vector2 {
 	x: number;

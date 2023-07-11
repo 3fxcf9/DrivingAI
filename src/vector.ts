@@ -1,3 +1,5 @@
+import { canvasArrow } from "./utils/canvasArrow.js";
+
 export class Vector2 {
 	x: number;
 	y: number;
@@ -42,5 +44,9 @@ export class Vector2 {
 		const copy = this.copy();
 		copy.normalize();
 		return copy;
+	}
+
+	display(ctx: CanvasRenderingContext2D, origin_x: number, origin_y: number, color?: string) {
+		canvasArrow(ctx, this.copy().multiply(20), origin_x, origin_y, color);
 	}
 }

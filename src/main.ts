@@ -1,4 +1,5 @@
 import { Vector2 } from "./utils/vector.js";
+import { Car } from "./classes/car.js";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
@@ -27,6 +28,9 @@ function keyUpHandler(e: KeyboardEvent) {
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
 
+// Init classes
+const car = new Car(canvas.width / 2, canvas.height / 2);
+
 // Launch the game
 function clear() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -34,8 +38,9 @@ function clear() {
 
 function draw() {
 	requestAnimationFrame(draw);
-	// clear();
-	new Vector2(1, 1).display(ctx, 100, 100);
+	clear();
+
+	car.render(ctx);
 }
 
 draw();

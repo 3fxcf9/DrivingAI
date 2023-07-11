@@ -49,4 +49,15 @@ export class Vector2 {
 	display(ctx: CanvasRenderingContext2D, origin_x: number, origin_y: number, color?: string) {
 		canvasArrow(ctx, this.copy().multiply(20), origin_x, origin_y, color);
 	}
+
+	static dot(u: Vector2, v: Vector2) {
+		return u.x * v.x + u.y * v.y;
+	}
+
+	static angle(u: Vector2, v: Vector2) {
+		const dot = Vector2.dot(u, v);
+		const magnitude_product = u.magnitude * v.magnitude;
+
+		return Math.acos(dot / magnitude_product);
+	}
 }

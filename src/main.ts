@@ -1,5 +1,6 @@
-import { Vector2 } from "./utils/vector.js";
 import { Car } from "./classes/car.js";
+import { canvasArrow } from "./utils/canvasArrow.js";
+import { Vector2 } from "./utils/vector.js";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
@@ -13,34 +14,44 @@ resizeCanvas();
 
 var ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
+export function reset() {
+	if (!canvas || !ctx) return console.log("Reset error");
+	ctx.setTransform(1, 0, 0, -1, canvas.width / 2, canvas.height / 2);
+}
+function clear() {
+	ctx.clearRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+}
+
 // Controls
 // 37, 38, 39, 40 => Left, Top, Right, Down
 // 90, 81, 83, 68 => Z, Q, S, D
-let keys: { [x: string]: boolean } = {};
+const keys = new Set<string>();
 
 function keyDownHandler(e: KeyboardEvent) {
-	keys[e.code] = true;
+	keys.add(e.code);
 }
 function keyUpHandler(e: KeyboardEvent) {
-	keys[e.code] = false;
+	keys.delete(e.code);
 }
 
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
 
 // Init classes
-const car = new Car(canvas.width / 2, canvas.height / 2);
+const car = new Car(0, 0);
 
 // Launch the game
-function clear() {
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
 function draw() {
 	requestAnimationFrame(draw);
+	reset();
 	clear();
 
-	car.render(ctx);
+	// Axis
+
+	canvasArrow(ctx, new Vector2(canvas.width, 0), -canvas.width / 2, 0, "white");
+	canvasArrow(ctx, new Vector2(0, canvas.height), 0, -canvas.height / 2, "white");
+
+	car.render(ctx, keys);
 }
 
 draw();

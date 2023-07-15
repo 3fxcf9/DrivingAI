@@ -1,7 +1,8 @@
 import { Vector2 } from "./vector.js";
 
 export function canvasArrow(context: CanvasRenderingContext2D, vector: Vector2, origin_x: number = 0, origin_y: number = 0, color: string = "white") {
-	const headlen = vector.magnitude * 0.3; // length of head in pixels
+	const headlen = 10; // length of head in pixels
+
 	const angle = Math.atan2(vector.y, vector.x);
 
 	const tox = vector.x + origin_x;

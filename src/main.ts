@@ -1,8 +1,9 @@
-import { Car } from "./classes/car.js";
-import { canvasArrow } from "./utils/canvasArrow.js";
 import { Vector2 } from "./utils/vector.js";
+import { canvasArrow } from "./utils/canvasArrow.js";
+import { Car } from "./classes/car.js";
+import { Track } from "./classes/track.js";
 
-const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+export const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
 // Dynamic canvas size
 function resizeCanvas() {
@@ -12,11 +13,13 @@ function resizeCanvas() {
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-var ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+export const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
 export function reset() {
 	if (!canvas || !ctx) return console.log("Reset error");
 	ctx.setTransform(1, 0, 0, -1, canvas.width / 2, canvas.height / 2);
+	ctx.strokeStyle = "white";
+	ctx.lineWidth = 1;
 }
 function clear() {
 	ctx.clearRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
@@ -39,6 +42,7 @@ document.addEventListener("keyup", keyUpHandler, false);
 
 // Init classes
 const car = new Car(0, 0);
+export const track = new Track();
 
 // Launch the game
 function draw() {
@@ -47,10 +51,10 @@ function draw() {
 	clear();
 
 	// Axis
-
 	canvasArrow(ctx, new Vector2(canvas.width, 0), -canvas.width / 2, 0, "white");
 	canvasArrow(ctx, new Vector2(0, canvas.height), 0, -canvas.height / 2, "white");
 
+	track.render(ctx);
 	car.render(ctx, keys);
 }
 

@@ -36,6 +36,10 @@ export class Vector2 {
 		[this.x, this.y] = [vector.x, vector.y];
 	}
 
+	get toArray(): [x: number, y: number] {
+		return [this.x, this.y];
+	}
+
 	add(vector: Vector2) {
 		this.x += vector.x;
 		this.y += vector.y;

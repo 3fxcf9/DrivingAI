@@ -1,5 +1,7 @@
 import { Vector2 } from "../utils/vector.js";
-import { reset } from "../main.js";
+import { Point } from "../utils/point.js";
+import { reset, track } from "../main.js";
+import { intersection } from "../utils/segmentsIntersection.js";
 
 export class Car {
 	position: Vector2;
@@ -38,6 +40,63 @@ export class Car {
 		this.braking_coefficient = 0.04;
 
 		this.color = color || "red";
+	}
+
+	checkCollision(ctx: CanvasRenderingContext2D) {
+		const i = new Vector2(-10, 15).rotate(this.heading);
+		const j = new Vector2(10, 15).rotate(this.heading);
+		const k = new Vector2(10, -15).rotate(this.heading);
+		const l = new Vector2(-10, -15).rotate(this.heading);
+
+		const a = new Point(this.position.x + i.x, this.position.y + i.y);
+		const b = new Point(this.position.x + j.x, this.position.y + j.y);
+		const c = new Point(this.position.x + k.x, this.position.y + k.y);
+		const d = new Point(this.position.x + l.x, this.position.y + l.y);
+
+		// a.display(ctx);
+		// b.display(ctx);
+		// c.display(ctx);
+		// d.display(ctx);
+
+		let game_over = false;
+		intersection_detected: for (const path of track.track) {
+			for (let i = 1; i < path.length; i++) {
+				const trackSegmentPoints: Point[] = [Point.fromArray(track.pointToCoords(path[i - 1])), Point.fromArray(track.pointToCoords(path[i]))];
+
+				const m = intersection(a, b, trackSegmentPoints[0], trackSegmentPoints[1]);
+				if (m) {
+					m.display(ctx, "red");
+					game_over = true;
+					// break intersection_detected;
+				}
+
+				const n = intersection(b, c, trackSegmentPoints[0], trackSegmentPoints[1]);
+				if (n) {
+					n.display(ctx, "red");
+					game_over = true;
+					// break intersection_detected;
+				}
+
+				const o = intersection(c, d, trackSegmentPoints[0], trackSegmentPoints[1]);
+				if (o) {
+					o.display(ctx, "red");
+					game_over = true;
+					// break intersection_detected;
+				}
+
+				const p = intersection(d, a, trackSegmentPoints[0], trackSegmentPoints[1]);
+				if (p) {
+					p.display(ctx, "red");
+					game_over = true;
+					// break intersection_detected;
+				}
+			}
+		}
+		if (game_over) {
+			this.color = "yellow";
+		} else {
+			this.color = "red";
+		}
 	}
 
 	drawCar(ctx: CanvasRenderingContext2D) {
@@ -147,5 +206,7 @@ export class Car {
 		// lateral.copy().multiply(50).display(ctx, this.position.x, this.position.y, "violet");
 
 		this.drawCar(ctx);
+
+		this.checkCollision(ctx);
 	}
 }

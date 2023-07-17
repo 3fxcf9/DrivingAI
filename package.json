@@ -5,5 +5,8 @@
 	"author": "3fxcf9 <123954477+3fxcf9@users.noreply.github.com>",
 	"scripts": {
 		"build": "tsc && cp index.html dist/"
+	},
+	"devDependencies": {
+		"tsc": "^2.0.4"
 	}
 }

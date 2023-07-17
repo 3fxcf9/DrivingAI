@@ -1,7 +1,8 @@
 import { Vector2 } from "../utils/vector.js";
 import { Point } from "../utils/point.js";
+import { line } from "../utils/canvasLine.js";
 import { reset, track } from "../main.js";
-import { intersection } from "../utils/segmentsIntersection.js";
+import { intersection, lineSegmentIntersection } from "../utils/segmentsIntersection.js";
 
 export class Car {
 	position: Vector2;
@@ -65,28 +66,28 @@ export class Car {
 
 				const m = intersection(a, b, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (m) {
-					m.display(ctx, "red");
+					m.display(ctx, "brown");
 					game_over = true;
 					// break intersection_detected;
 				}
 
 				const n = intersection(b, c, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (n) {
-					n.display(ctx, "red");
+					n.display(ctx, "brown");
 					game_over = true;
 					// break intersection_detected;
 				}
 
 				const o = intersection(c, d, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (o) {
-					o.display(ctx, "red");
+					o.display(ctx, "brown");
 					game_over = true;
 					// break intersection_detected;
 				}
 
 				const p = intersection(d, a, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (p) {
-					p.display(ctx, "red");
+					p.display(ctx, "brown");
 					game_over = true;
 					// break intersection_detected;
 				}
@@ -96,6 +97,38 @@ export class Car {
 			this.color = "yellow";
 		} else {
 			this.color = "red";
+		}
+	}
+
+	raycast(ctx: CanvasRenderingContext2D) {
+		const headingUnitVector = Vector2.UNIT().setAngle(this.heading).multiply(50);
+
+		const origin = new Point(this.position.x, this.position.y);
+
+		const angles = [-1.5, -1, -0.5, 0, 0.5, 1, 1.5];
+		const points = angles.map((a) => getUnitPoint(a));
+		let distances = new Array(points.length).fill(Infinity);
+
+		for (const path of track.track) {
+			for (let i = 1; i < path.length; i++) {
+				const trackSegmentPoints: Point[] = [Point.fromArray(track.pointToCoords(path[i - 1])), Point.fromArray(track.pointToCoords(path[i]))];
+
+				distances = distances.map((d, i) => {
+					const intersection = lineSegmentIntersection(origin, points[i], trackSegmentPoints[0], trackSegmentPoints[1]);
+
+					if (intersection && intersection.t < d) {
+						line(ctx, origin, intersection?.point, "blue");
+						intersection.point.display(ctx, "red");
+						return intersection.t;
+					}
+					return d;
+				});
+			}
+		}
+
+		function getUnitPoint(angle: number) {
+			const unitRotated = headingUnitVector.copy().rotate(angle);
+			return new Point(origin.x + unitRotated.x, origin.y + unitRotated.y);
 		}
 	}
 
@@ -206,7 +239,7 @@ export class Car {
 		// lateral.copy().multiply(50).display(ctx, this.position.x, this.position.y, "violet");
 
 		this.drawCar(ctx);
-
+		this.raycast(ctx);
 		this.checkCollision(ctx);
 	}
 }

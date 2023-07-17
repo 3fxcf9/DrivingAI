@@ -16,6 +16,10 @@ export class Point {
 		return [this.x, this.y];
 	}
 
+	copy() {
+		return new Point(this.x, this.y);
+	}
+
 	display(ctx: CanvasRenderingContext2D, color?: string, radius?: number) {
 		reset();
 		ctx.beginPath();

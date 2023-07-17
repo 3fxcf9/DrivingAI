@@ -11,13 +11,11 @@ export class Car {
 	wheels_angle: number;
 
 	acceleration: number;
-	maxspeed: number;
-	friction: number;
 	drag_coefficient: number;
 	drag_hardness: number;
 	braking_coefficient: number;
 	rotation_speed: number;
-	direction_angle: number;
+	wheel_rotation_angle: number;
 
 	color: string;
 
@@ -30,14 +28,14 @@ export class Car {
 		this.wheels_angle = 0;
 
 		// Constants
-		this.acceleration = 1;
-		this.maxspeed = 8;
-		this.friction = 0.95;
-		this.rotation_speed = 0.08;
-		this.direction_angle = 0.1;
-		this.drag_coefficient = 0.04;
+		this.acceleration = 100;
+		this.braking_coefficient = 4;
+
+		this.rotation_speed = 6;
+		this.wheel_rotation_angle = 1;
+
 		this.drag_hardness = 0.2;
-		this.braking_coefficient = 0.04;
+		this.drag_coefficient = 4;
 
 		this.color = color || "red";
 	}
@@ -53,18 +51,10 @@ export class Car {
 		const c = new Point(this.position.x + k.x, this.position.y + k.y);
 		const d = new Point(this.position.x + l.x, this.position.y + l.y);
 
-		// a.display(ctx);
-		// b.display(ctx);
-		// c.display(ctx);
-		// d.display(ctx);
-
 		let game_over = false;
 		intersection_detected: for (const path of globalThis.game.track.track) {
 			for (let i = 1; i < path.length; i++) {
-				const trackSegmentPoints: Point[] = [
-					Point.fromArray(globalThis.game.track.pointToCoords(path[i - 1])),
-					Point.fromArray(globalThis.game.track.pointToCoords(path[i])),
-				];
+				const trackSegmentPoints: Point[] = [globalThis.game.track.trackCoordsToPoint(path[i - 1]), globalThis.game.track.trackCoordsToPoint(path[i])];
 
 				const m = intersection(a, b, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (m) {
@@ -109,27 +99,36 @@ export class Car {
 
 		const angles = [-1.5, -1, -0.5, 0, 0.5, 1, 1.5];
 		const points = angles.map((a) => getUnitPoint(a));
-		let distances = new Array(points.length).fill(Infinity);
+		let distances = new Array(points.length).fill({ d: Infinity, p: undefined });
 
 		for (const path of globalThis.game.track.track) {
 			for (let i = 1; i < path.length; i++) {
-				const trackSegmentPoints: Point[] = [
-					Point.fromArray(globalThis.game.track.pointToCoords(path[i - 1])),
-					Point.fromArray(globalThis.game.track.pointToCoords(path[i])),
-				];
+				const trackSegmentPoints: Point[] = [globalThis.game.track.trackCoordsToPoint(path[i - 1]), globalThis.game.track.trackCoordsToPoint(path[i])];
 
-				distances = distances.map((d, i) => {
+				distances = distances.map(({ d, p }, i) => {
 					const intersection = lineSegmentIntersection(origin, points[i], trackSegmentPoints[0], trackSegmentPoints[1]);
 
 					if (intersection && intersection.t < d) {
-						line(origin, intersection?.point, "blue");
-						intersection.point.display("red");
-						return intersection.t;
+						return { d: intersection.t, p: intersection.point };
 					}
-					return d;
+					return { d, p };
 				});
 			}
 		}
+
+		for (const { p } of distances) {
+			if (!p) continue;
+
+			line(origin, p, "blue");
+			p.display("red");
+		}
+
+		globalThis.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
+		globalThis.game.ctx.fillStyle = "white";
+		globalThis.game.ctx.font = "1.2rem bold monospace";
+		globalThis.game.ctx.textAlign = "center";
+		globalThis.game.ctx.fillText(`[${distances.map(({ d }) => Math.round(d)).join("|")}]`, globalThis.game.canvas.width / 2, 10);
+		globalThis.game.reset();
 
 		function getUnitPoint(angle: number) {
 			const unitRotated = headingUnitVector.copy().rotate(angle);
@@ -147,30 +146,9 @@ export class Car {
 		globalThis.game.ctx.fillRect(-10, -15, 20, 30);
 
 		globalThis.game.reset();
-
-		// // Wheels
-		// ctx.fillStyle = "white";
-
-		// ctx.translate(this.position.x - 8, this.position.y - 10);
-		// ctx.fillStyle = "black";
-		// ctx.fillRect(-2, -5, 7, 12);
-		// ctx.rotate(this.wheels_angle);
-		// ctx.fillStyle = "white";
-		// ctx.fillRect(-3, -5, 6, 10);
-
-		// ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-		// ctx.translate(this.position.x + 8, this.position.y - 10);
-		// ctx.fillStyle = "black";
-		// ctx.fillRect(-5, -5, 7, 12);
-		// ctx.rotate(this.wheels_angle);
-		// ctx.fillStyle = "white";
-		// ctx.fillRect(-3, -5, 6, 10);
-
-		// ctx.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
-	render() {
+	render(delta: number) {
 		let forces = Vector2.NULL();
 		const headingUnitVector = Vector2.UNIT().setAngle(this.heading);
 
@@ -191,37 +169,28 @@ export class Car {
 				headingUnitVector
 					.copy()
 					.multiply(-1)
-					.multiply(this.velocity.magnitude ** 2 * this.braking_coefficient)
+					.multiply(this.velocity.magnitude * this.braking_coefficient)
 			);
 		}
 
 		// Left
 		this.wheels_angle = 0;
 		if (globalThis.game.keys.has("KeyA")) {
-			this.wheels_angle = -1;
+			this.wheels_angle = -this.wheel_rotation_angle;
 		}
 		// Right
 		if (globalThis.game.keys.has("KeyD")) {
-			this.wheels_angle = 1;
+			this.wheels_angle = this.wheel_rotation_angle;
 		}
 
 		let lateral = Vector2.NULL();
 
 		if (this.wheels_angle != 0) {
-			// const speed_component = 0.1 * this.velocity.magnitude;
-
-			// const vect_len = speed_component / Math.cos(Math.abs(this.wheels_angle - this.velocity.angle));
-
-			// lateral = this.velocity.copy().normalize().rotate(this.wheels_angle).multiply(vect_len);
-			// drag.add(this.velocity.copy().normalize().multiply(-speed_component));
-
-			// console.log(speed_component, vect_len, lateral.copy().projectOn(this.velocity).magnitude);
-
 			lateral = this.velocity
 				.copy()
 				.normalize()
 				.rotate(this.wheels_angle)
-				.multiply(this.velocity.magnitude / 10);
+				.multiply(this.velocity.magnitude * this.rotation_speed);
 			acceleration.substract(lateral.copy().projectOn(acceleration));
 		}
 
@@ -229,6 +198,8 @@ export class Car {
 		forces.add(acceleration);
 		forces.add(drag);
 		forces.add(lateral);
+
+		forces.multiply(delta);
 
 		this.velocity.add(forces);
 

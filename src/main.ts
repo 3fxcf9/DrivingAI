@@ -11,6 +11,10 @@ class Game {
 	car: Car;
 	track: Track;
 
+	last_frame: number;
+	last_deltas: number[];
+	current_fps: number;
+
 	constructor() {
 		globalThis.game = this;
 
@@ -42,6 +46,9 @@ class Game {
 		this.track = new Track();
 
 		// Launch the game
+		this.last_frame = performance.now();
+		this.last_deltas = [];
+		this.current_fps = 0;
 		this.#render();
 	}
 
@@ -54,6 +61,8 @@ class Game {
 		this.ctx.setTransform(1, 0, 0, -1, this.canvas.width / 2, this.canvas.height / 2);
 		this.ctx.strokeStyle = "white";
 		this.ctx.lineWidth = 1;
+		this.ctx.textAlign = "left";
+		this.ctx.textBaseline = "hanging";
 	}
 
 	clear() {
@@ -61,17 +70,36 @@ class Game {
 	}
 
 	#render = () => {
-		requestAnimationFrame(this.#render);
+		this.clear();
+
+		const now_time = performance.now();
+		const delta = (now_time - this.last_frame) / 1000;
+		this.last_frame = now_time;
+
+		if (this.last_deltas.reduce((a, b) => a + b, 0) < 0.2) {
+			this.last_deltas.push(delta);
+		} else {
+			const meanDelta = this.last_deltas.reduce((a, b) => a + b, 0) / this.last_deltas.length;
+			this.current_fps = Math.round(1 / meanDelta);
+
+			this.last_deltas = [];
+		}
+		this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+		this.ctx.fillStyle = "white";
+		this.ctx.font = "bold monospace 2rem";
+		this.ctx.textBaseline = "hanging";
+		this.ctx.fillText(`${this.current_fps}`, 10, 10);
 
 		this.reset();
-		this.clear();
 
 		// Axis
 		canvasArrow(new Vector2(this.canvas.width, 0), -this.canvas.width / 2, 0, "white");
 		canvasArrow(new Vector2(0, this.canvas.height), 0, -this.canvas.height / 2, "white");
 
 		this.track.render();
-		this.car.render();
+		this.car.render(delta);
+
+		requestAnimationFrame(this.#render);
 	};
 }
 

@@ -1,5 +1,5 @@
-import { lerp } from "./lerp.js";
 import { Point } from "./point.js";
+import { lerp } from "./lerp.js";
 
 /**
  * Two segments intersection [AB] and [CD] are the segments

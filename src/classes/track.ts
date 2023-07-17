@@ -1,7 +1,9 @@
-type TrackPoint = [x: number, y: number];
+import { Point } from "../utils/point.js";
+
+type TrackCoords = [x: number, y: number];
 
 export class Track {
-	track: TrackPoint[][];
+	track: TrackCoords[][];
 	constructor() {
 		this.track = [
 			[
@@ -96,8 +98,8 @@ export class Track {
 		// ];
 	}
 
-	pointToCoords(pt: TrackPoint): TrackPoint {
-		return [pt[0] * (globalThis.game.canvas.width / 2), pt[1] * (globalThis.game.canvas.height / 2)];
+	trackCoordsToPoint(pt: TrackCoords): Point {
+		return new Point(pt[0] * (globalThis.game.canvas.width / 2), pt[1] * (globalThis.game.canvas.height / 2));
 	}
 
 	render() {
@@ -107,8 +109,8 @@ export class Track {
 		for (const path of this.track) {
 			for (let i = 1; i < path.length; i++) {
 				globalThis.game.ctx.beginPath();
-				globalThis.game.ctx.moveTo(...this.pointToCoords(path[i - 1]));
-				globalThis.game.ctx.lineTo(...this.pointToCoords(path[i]));
+				globalThis.game.ctx.moveTo(...this.trackCoordsToPoint(path[i - 1]).toArray);
+				globalThis.game.ctx.lineTo(...this.trackCoordsToPoint(path[i]).toArray);
 				globalThis.game.ctx.closePath();
 				globalThis.game.ctx.stroke();
 			}

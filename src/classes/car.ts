@@ -93,11 +93,17 @@ export class Car {
 	}
 
 	raycast() {
-		const headingUnitVector = Vector2.UNIT().setAngle(this.heading).multiply(50);
+		const headingUnitVector = Vector2.UNIT().setAngle(this.heading);
 
 		const origin = new Point(this.position.x, this.position.y);
+		// +15
+		const centerToFront = headingUnitVector.copy().multiply(15);
+		origin.x += centerToFront.x;
+		origin.y += centerToFront.y;
 
-		const angles = [-1.5, -1, -0.5, 0, 0.5, 1, 1.5];
+		let angles = [];
+		for (let i = -1.5; i < 1.5; i += 0.02) angles.push(i);
+		// const angles = [-1.5, -1, -0.5, 0, 0.5, 1, 1.5];
 		const points = angles.map((a) => getUnitPoint(a));
 		let distances = new Array(points.length).fill({ d: Infinity, p: undefined });
 
@@ -123,15 +129,33 @@ export class Car {
 			p.display("red");
 		}
 
-		globalThis.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
-		globalThis.game.ctx.fillStyle = "white";
-		globalThis.game.ctx.font = "1.2rem bold monospace";
-		globalThis.game.ctx.textAlign = "center";
-		globalThis.game.ctx.fillText(`[${distances.map(({ d }) => Math.round(d)).join("|")}]`, globalThis.game.canvas.width / 2, 10);
-		globalThis.game.reset();
+		// globalThis.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
+		// globalThis.game.ctx.fillStyle = "white";
+		// globalThis.game.ctx.font = "1.2rem bold monospace";
+		// globalThis.game.ctx.textAlign = "center";
+		// globalThis.game.ctx.fillText(`[${distances.map(({ d }) => Math.round(d)).join("|")}]`, globalThis.game.canvas.width / 2, 10);
+		// globalThis.game.reset();
+
+		const visuSize = [400, 500];
+		const visuXOrigin = -globalThis.game.canvas.width / 2;
+		const rectWidth = Math.round(visuSize[0] / distances.length);
+		const rectHeights = distances.map(({ d }) => {
+			return { h: visuSize[1] / (d + 1) ** 2, c: 255 / (d + 1) ** 2 + 20 };
+		});
+
+		globalThis.game.ctx.fillStyle = "black";
+		globalThis.game.ctx.strokeStyle = this.color;
+		globalThis.game.ctx.lineWidth = 2;
+		globalThis.game.ctx.fillRect(visuXOrigin, -visuSize[1] / 2, rectWidth * distances.length + 1, visuSize[1]);
+		globalThis.game.ctx.strokeRect(visuXOrigin, -visuSize[1] / 2, rectWidth * distances.length + 1, visuSize[1]);
+
+		rectHeights.forEach(({ h, c }, i) => {
+			globalThis.game.ctx.fillStyle = `rgba(${c}, ${c}, ${c})`;
+			globalThis.game.ctx.fillRect(visuXOrigin + i * rectWidth, -h / 2, rectWidth, h);
+		});
 
 		function getUnitPoint(angle: number) {
-			const unitRotated = headingUnitVector.copy().rotate(angle);
+			const unitRotated = headingUnitVector.copy().rotate(angle).multiply(50);
 			return new Point(origin.x + unitRotated.x, origin.y + unitRotated.y);
 		}
 	}

@@ -1,5 +1,3 @@
-import { reset } from "../main.js";
-
 export class Point {
 	x: number;
 	y: number;
@@ -20,12 +18,12 @@ export class Point {
 		return new Point(this.x, this.y);
 	}
 
-	display(ctx: CanvasRenderingContext2D, color?: string, radius?: number) {
-		reset();
-		ctx.beginPath();
-		ctx.arc(this.x, this.y, radius || 5, 0, Math.PI * 2);
-		ctx.fillStyle = color || "white";
-		ctx.fill();
-		ctx.closePath();
+	display(color?: string, radius?: number) {
+		globalThis.game.reset();
+		globalThis.game.ctx.beginPath();
+		globalThis.game.ctx.arc(this.x, this.y, radius || 5, 0, Math.PI * 2);
+		globalThis.game.ctx.fillStyle = color || "white";
+		globalThis.game.ctx.fill();
+		globalThis.game.ctx.closePath();
 	}
 }

@@ -1,5 +1,3 @@
-import { reset, canvas } from "../main.js";
-
 type TrackPoint = [x: number, y: number];
 
 export class Track {
@@ -99,20 +97,20 @@ export class Track {
 	}
 
 	pointToCoords(pt: TrackPoint): TrackPoint {
-		return [pt[0] * (canvas.width / 2), pt[1] * (canvas.height / 2)];
+		return [pt[0] * (globalThis.game.canvas.width / 2), pt[1] * (globalThis.game.canvas.height / 2)];
 	}
 
-	render(ctx: CanvasRenderingContext2D) {
-		reset();
-		ctx.strokeStyle = "white";
-		ctx.lineWidth = 5;
+	render() {
+		globalThis.game.reset();
+		globalThis.game.ctx.strokeStyle = "white";
+		globalThis.game.ctx.lineWidth = 5;
 		for (const path of this.track) {
 			for (let i = 1; i < path.length; i++) {
-				ctx.beginPath();
-				ctx.moveTo(...this.pointToCoords(path[i - 1]));
-				ctx.lineTo(...this.pointToCoords(path[i]));
-				ctx.closePath();
-				ctx.stroke();
+				globalThis.game.ctx.beginPath();
+				globalThis.game.ctx.moveTo(...this.pointToCoords(path[i - 1]));
+				globalThis.game.ctx.lineTo(...this.pointToCoords(path[i]));
+				globalThis.game.ctx.closePath();
+				globalThis.game.ctx.stroke();
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 import { Vector2 } from "../utils/vector.js";
 import { Point } from "../utils/point.js";
 import { line } from "../utils/canvasLine.js";
-import { reset, track } from "../main.js";
 import { intersection, lineSegmentIntersection } from "../utils/segmentsIntersection.js";
 
 export class Car {
@@ -43,7 +42,7 @@ export class Car {
 		this.color = color || "red";
 	}
 
-	checkCollision(ctx: CanvasRenderingContext2D) {
+	checkCollision() {
 		const i = new Vector2(-10, 15).rotate(this.heading);
 		const j = new Vector2(10, 15).rotate(this.heading);
 		const k = new Vector2(10, -15).rotate(this.heading);
@@ -60,34 +59,37 @@ export class Car {
 		// d.display(ctx);
 
 		let game_over = false;
-		intersection_detected: for (const path of track.track) {
+		intersection_detected: for (const path of globalThis.game.track.track) {
 			for (let i = 1; i < path.length; i++) {
-				const trackSegmentPoints: Point[] = [Point.fromArray(track.pointToCoords(path[i - 1])), Point.fromArray(track.pointToCoords(path[i]))];
+				const trackSegmentPoints: Point[] = [
+					Point.fromArray(globalThis.game.track.pointToCoords(path[i - 1])),
+					Point.fromArray(globalThis.game.track.pointToCoords(path[i])),
+				];
 
 				const m = intersection(a, b, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (m) {
-					m.display(ctx, "brown");
+					m.display("brown");
 					game_over = true;
 					// break intersection_detected;
 				}
 
 				const n = intersection(b, c, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (n) {
-					n.display(ctx, "brown");
+					n.display("brown");
 					game_over = true;
 					// break intersection_detected;
 				}
 
 				const o = intersection(c, d, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (o) {
-					o.display(ctx, "brown");
+					o.display("brown");
 					game_over = true;
 					// break intersection_detected;
 				}
 
 				const p = intersection(d, a, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (p) {
-					p.display(ctx, "brown");
+					p.display("brown");
 					game_over = true;
 					// break intersection_detected;
 				}
@@ -100,7 +102,7 @@ export class Car {
 		}
 	}
 
-	raycast(ctx: CanvasRenderingContext2D) {
+	raycast() {
 		const headingUnitVector = Vector2.UNIT().setAngle(this.heading).multiply(50);
 
 		const origin = new Point(this.position.x, this.position.y);
@@ -109,16 +111,19 @@ export class Car {
 		const points = angles.map((a) => getUnitPoint(a));
 		let distances = new Array(points.length).fill(Infinity);
 
-		for (const path of track.track) {
+		for (const path of globalThis.game.track.track) {
 			for (let i = 1; i < path.length; i++) {
-				const trackSegmentPoints: Point[] = [Point.fromArray(track.pointToCoords(path[i - 1])), Point.fromArray(track.pointToCoords(path[i]))];
+				const trackSegmentPoints: Point[] = [
+					Point.fromArray(globalThis.game.track.pointToCoords(path[i - 1])),
+					Point.fromArray(globalThis.game.track.pointToCoords(path[i])),
+				];
 
 				distances = distances.map((d, i) => {
 					const intersection = lineSegmentIntersection(origin, points[i], trackSegmentPoints[0], trackSegmentPoints[1]);
 
 					if (intersection && intersection.t < d) {
-						line(ctx, origin, intersection?.point, "blue");
-						intersection.point.display(ctx, "red");
+						line(origin, intersection?.point, "blue");
+						intersection.point.display("red");
 						return intersection.t;
 					}
 					return d;
@@ -132,16 +137,16 @@ export class Car {
 		}
 	}
 
-	drawCar(ctx: CanvasRenderingContext2D) {
-		reset();
+	drawCar() {
+		globalThis.game.reset();
 
-		ctx.translate(this.position.x, this.position.y);
-		ctx.rotate(-this.heading);
+		globalThis.game.ctx.translate(this.position.x, this.position.y);
+		globalThis.game.ctx.rotate(-this.heading);
 
-		ctx.fillStyle = this.color;
-		ctx.fillRect(-10, -15, 20, 30);
+		globalThis.game.ctx.fillStyle = this.color;
+		globalThis.game.ctx.fillRect(-10, -15, 20, 30);
 
-		reset();
+		globalThis.game.reset();
 
 		// // Wheels
 		// ctx.fillStyle = "white";
@@ -165,13 +170,13 @@ export class Car {
 		// ctx.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
-	render(ctx: CanvasRenderingContext2D, keys: Set<string>) {
+	render() {
 		let forces = Vector2.NULL();
 		const headingUnitVector = Vector2.UNIT().setAngle(this.heading);
 
 		// Forward
 		let acceleration = Vector2.NULL();
-		if (keys.has("KeyW")) {
+		if (globalThis.game.keys.has("KeyW")) {
 			acceleration = headingUnitVector.copy().multiply(this.acceleration);
 		}
 
@@ -181,7 +186,7 @@ export class Car {
 			.multiply(-1)
 			.multiply(this.drag_hardness * this.velocity.magnitude ** 2 * this.drag_coefficient);
 
-		if (keys.has("KeyS")) {
+		if (globalThis.game.keys.has("KeyS")) {
 			drag.add(
 				headingUnitVector
 					.copy()
@@ -192,11 +197,11 @@ export class Car {
 
 		// Left
 		this.wheels_angle = 0;
-		if (keys.has("KeyA")) {
+		if (globalThis.game.keys.has("KeyA")) {
 			this.wheels_angle = -1;
 		}
 		// Right
-		if (keys.has("KeyD")) {
+		if (globalThis.game.keys.has("KeyD")) {
 			this.wheels_angle = 1;
 		}
 
@@ -238,8 +243,8 @@ export class Car {
 		// drag.multiply(5).display(ctx, this.position.x, this.position.y, "red");
 		// lateral.copy().multiply(50).display(ctx, this.position.x, this.position.y, "violet");
 
-		this.drawCar(ctx);
-		this.raycast(ctx);
-		this.checkCollision(ctx);
+		this.drawCar();
+		this.raycast();
+		this.checkCollision();
 	}
 }

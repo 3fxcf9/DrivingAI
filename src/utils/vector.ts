@@ -118,8 +118,8 @@ export class Vector2 {
 		return this;
 	}
 
-	display(ctx: CanvasRenderingContext2D, origin_x: number, origin_y: number, color?: string) {
-		canvasArrow(ctx, this.copy().multiply(20), origin_x, origin_y, color);
+	display(origin_x: number, origin_y: number, color?: string) {
+		canvasArrow(this.copy().multiply(20), origin_x, origin_y, color);
 	}
 
 	get angle() {

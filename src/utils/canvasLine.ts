@@ -1,12 +1,11 @@
-import { reset } from "../main.js";
 import { Point } from "./point.js";
 
-export function line(ctx: CanvasRenderingContext2D, A: Point, B: Point, color: string) {
-	reset();
-	ctx.beginPath();
-	ctx.moveTo(...A.toArray);
-	ctx.lineTo(...B.toArray);
-	ctx.strokeStyle = color;
-	ctx.stroke();
-	ctx.closePath();
+export function line(A: Point, B: Point, color: string) {
+	globalThis.game.reset();
+	globalThis.game.ctx.beginPath();
+	globalThis.game.ctx.moveTo(...A.toArray);
+	globalThis.game.ctx.lineTo(...B.toArray);
+	globalThis.game.ctx.strokeStyle = color;
+	globalThis.game.ctx.stroke();
+	globalThis.game.ctx.closePath();
 }

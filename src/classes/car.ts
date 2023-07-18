@@ -19,6 +19,13 @@ export class Car {
 
 	color: string;
 
+	// Raycast
+	debugView: boolean;
+
+	raycastAngles: number[];
+
+	debugCtx: CanvasRenderingContext2D | null; // Debug raycast view
+
 	constructor(x: number = 0, y: number = 0, color?: string) {
 		this.position = new Vector2(x, y);
 
@@ -38,6 +45,27 @@ export class Car {
 		this.drag_coefficient = 4;
 
 		this.color = color || "red";
+
+		// -------- Raycast --------
+		this.debugView = false; // Change this
+
+		this.raycastAngles = [];
+		for (let i = -1.3; i < 1.3; i += 0.2) this.raycastAngles.push(i);
+
+		// Debug raycast view
+		this.debugCtx = null;
+		if (this.debugView) {
+			const debugPopup = window.open("", "Car view", "width=400,height=500");
+			if (!debugPopup) this.debugView = false;
+			else {
+				debugPopup.document.body.style.margin = "0";
+				const debugCanvas = debugPopup.document.createElement("canvas");
+				debugCanvas.width = 400;
+				debugCanvas.height = 500;
+				debugPopup.document.body.appendChild(debugCanvas);
+				this.debugCtx = debugCanvas.getContext("2d") as CanvasRenderingContext2D;
+			}
+		}
 	}
 
 	checkCollision() {
@@ -96,15 +124,17 @@ export class Car {
 		const headingUnitVector = Vector2.UNIT().setAngle(this.heading);
 
 		const origin = new Point(this.position.x, this.position.y);
-		// +15
+		// Translate origin to the front of the car
 		const centerToFront = headingUnitVector.copy().multiply(15);
 		origin.x += centerToFront.x;
 		origin.y += centerToFront.y;
 
-		let angles = [];
-		for (let i = -1.5; i < 1.5; i += 0.02) angles.push(i);
-		// const angles = [-1.5, -1, -0.5, 0, 0.5, 1, 1.5];
-		const points = angles.map((a) => getUnitPoint(a));
+		function getUnitPoint(angle: number) {
+			const unitRotated = headingUnitVector.copy().rotate(angle).multiply(50);
+			return new Point(origin.x + unitRotated.x, origin.y + unitRotated.y);
+		}
+
+		const points = this.raycastAngles.map((a) => getUnitPoint(a));
 		let distances = new Array(points.length).fill({ d: Infinity, p: undefined });
 
 		for (const path of globalThis.game.track.track) {
@@ -122,41 +152,41 @@ export class Car {
 			}
 		}
 
-		for (const { p } of distances) {
-			if (!p) continue;
+		// Display rays and intersection points
+		if (this.debugView) {
+			for (const { p } of distances) {
+				if (!p) continue;
 
-			line(origin, p, "blue");
-			p.display("red");
+				line(origin, p, "blue");
+				p.display("red");
+			}
 		}
 
-		// globalThis.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
-		// globalThis.game.ctx.fillStyle = "white";
-		// globalThis.game.ctx.font = "1.2rem bold monospace";
-		// globalThis.game.ctx.textAlign = "center";
-		// globalThis.game.ctx.fillText(`[${distances.map(({ d }) => Math.round(d)).join("|")}]`, globalThis.game.canvas.width / 2, 10);
-		// globalThis.game.reset();
+		// Debug raycast view
+		if (this.debugView) {
+			console.log(this.debugCtx);
 
-		const visuSize = [400, 500];
-		const visuXOrigin = -globalThis.game.canvas.width / 2;
-		const rectWidth = Math.round(visuSize[0] / distances.length);
-		const rectHeights = distances.map(({ d }) => {
-			return { h: visuSize[1] / (d + 1) ** 2, c: 255 / (d + 1) ** 2 + 20 };
-		});
+			const rectWidth = Math.round(this.debugCtx!.canvas.width / distances.length);
+			const rectHeights = distances.map(({ d }) => {
+				return { h: this.debugCtx!.canvas.height / (d + 1) ** 2, c: 255 / (d + 1) ** 2 + 20 };
+			});
 
-		globalThis.game.ctx.fillStyle = "black";
-		globalThis.game.ctx.strokeStyle = this.color;
-		globalThis.game.ctx.lineWidth = 2;
-		globalThis.game.ctx.fillRect(visuXOrigin, -visuSize[1] / 2, rectWidth * distances.length + 1, visuSize[1]);
-		globalThis.game.ctx.strokeRect(visuXOrigin, -visuSize[1] / 2, rectWidth * distances.length + 1, visuSize[1]);
+			this.debugCtx!.fillStyle = "black";
+			this.debugCtx!.fillRect(0, 0, this.debugCtx!.canvas.width, this.debugCtx!.canvas.height);
 
-		rectHeights.forEach(({ h, c }, i) => {
-			globalThis.game.ctx.fillStyle = `rgba(${c}, ${c}, ${c})`;
-			globalThis.game.ctx.fillRect(visuXOrigin + i * rectWidth, -h / 2, rectWidth, h);
-		});
+			// Sky
+			this.debugCtx!.fillStyle = "#00609f";
+			this.debugCtx!.fillRect(0, 0, this.debugCtx!.canvas.width, this.debugCtx!.canvas.height / 2);
 
-		function getUnitPoint(angle: number) {
-			const unitRotated = headingUnitVector.copy().rotate(angle).multiply(50);
-			return new Point(origin.x + unitRotated.x, origin.y + unitRotated.y);
+			rectHeights.forEach(({ h, c }, i) => {
+				this.debugCtx!.fillStyle = `rgba(${c}, ${c}, ${c})`;
+				this.debugCtx!.fillRect(i * rectWidth, (this.debugCtx!.canvas.height - h) / 2, rectWidth, h);
+			});
+
+			// Border
+			this.debugCtx!.strokeStyle = this.color;
+			this.debugCtx!.lineWidth = 2;
+			this.debugCtx!.strokeRect(2, 2, this.debugCtx!.canvas.width - 2, this.debugCtx!.canvas.height - 2);
 		}
 	}
 

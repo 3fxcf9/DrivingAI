@@ -7,9 +7,6 @@
 		"build": "tsc && cp index.html dist/"
 	},
 	"devDependencies": {
-		"tsc": "^2.0.4"
-	},
-	"dependencies": {
 		"typescript": "^5.1.6"
 	}
 }

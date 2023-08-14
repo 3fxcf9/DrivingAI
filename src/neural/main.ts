@@ -1,29 +1,37 @@
-type Batch = number[][];
-
 import { Layer_Dense } from "./lib/dense.js";
 import { Activation_Softmax } from "./lib/softmax.js";
 import { Activation_Step } from "./lib/step.js";
 
+class NeuralNetwork {
+	layers: any[];
+
+	constructor(...dimensions: number[]) {
+		this.layers = [];
+		for (let i = 0; i < dimensions.length - 1; i++) {
+			this.layers = this.layers.concat([new Layer_Dense(dimensions[i], dimensions[i + 1]), new Activation_Softmax()]);
+		}
+
+		this.layers[this.layers.length - 1] = new Activation_Step();
+	}
+
+	forward(inputs: number[]) {
+		for (let i = 0; i < this.layers.length; i++) {
+			if (i == 0) {
+				this.layers[i].forward(inputs);
+			} else {
+				this.layers[i].forward(this.layers[i - 1].output);
+			}
+		}
+
+		return this.layers[this.layers.length - 1].output;
+	}
+}
+
 // NN example with size of (14;64;64;4)
-const layer1 = new Layer_Dense(14, 64);
-const activation1 = new Activation_Softmax();
-const layer2 = new Layer_Dense(64, 64);
-const activation2 = new Activation_Softmax();
-const layer3 = new Layer_Dense(64, 4);
-const activation3 = new Activation_Step();
+const network = new NeuralNetwork(14, 64, 64, 4);
 
-const batch: Batch = new Array(100).fill(null).map((n) => new Array(14).fill(null).map((w) => Math.random() * 2 - 1));
+const inputs = new Array(14).fill(null).map((w) => Math.random() * 2 - 1);
+console.log(inputs);
 
-// Layer 1
-layer1.forward(batch);
-activation1.forward(layer1.output as Batch);
-
-// Layer 2
-layer2.forward(activation1.output as Batch);
-activation2.forward(layer2.output as Batch);
-
-// Layer 3
-layer3.forward(activation2.output as Batch);
-activation3.forward(layer3.output as Batch);
-
-console.dir(activation3.output);
+const output = network.forward(inputs);
+console.log(output);

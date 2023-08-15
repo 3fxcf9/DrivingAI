@@ -3,7 +3,7 @@ export class Layer_Dense {
 	biases: number[];
 	output: undefined | number[];
 
-	constructor(n_inputs: number, n_neurons: number) {
+	constructor(public n_inputs: number, public n_neurons: number) {
 		this.weights = new Array(n_neurons).fill(null).map((n) => new Array(n_inputs).fill(null).map((w) => Math.random() * 2 - 1));
 
 		this.biases = new Array(n_neurons).fill(0);

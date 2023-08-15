@@ -25,13 +25,45 @@ class NeuralNetwork {
 
 		return this.layers[this.layers.length - 1].output;
 	}
+
+	get params() {
+		const params = [];
+
+		for (const layer of this.layers) {
+			if (layer instanceof Layer_Dense) {
+				params.push(...layer.weights.flat(), ...layer.biases);
+			}
+		}
+
+		return params;
+	}
+
+	set params(params) {
+		for (const layer of this.layers) {
+			if (layer instanceof Layer_Dense) {
+				params.push(...layer.weights.flat(), ...layer.biases);
+
+				const layer_weight_matrix = [];
+				for (let i = 0; i < layer.n_neurons; i++) layer_weight_matrix.push(params.splice(0, layer.n_inputs));
+				layer.weights = layer_weight_matrix;
+				layer.biases = params.splice(0, layer.n_neurons);
+			}
+		}
+	}
 }
 
 // NN example with size of (14;64;64;4)
 const network = new NeuralNetwork(14, 64, 64, 4);
 
 const inputs = new Array(14).fill(null).map((w) => Math.random() * 2 - 1);
-console.log(inputs);
 
 const output = network.forward(inputs);
-console.log(output);
+console.log("Output: ", output);
+
+const a = network.params;
+network.params = a;
+
+const output2 = network.forward(inputs);
+console.log("Output2: ", output2);
+
+console.log(JSON.stringify(network.params) == JSON.stringify(a)); // True

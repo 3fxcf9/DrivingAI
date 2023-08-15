@@ -18,6 +18,7 @@ export class Car {
 	wheel_rotation_angle: number;
 
 	color: string;
+	is_bot: boolean;
 
 	// Raycast
 	debugView: boolean;
@@ -26,8 +27,8 @@ export class Car {
 
 	debugCtx: CanvasRenderingContext2D | null; // Debug raycast view
 
-	constructor(x: number = 0, y: number = 0, color?: string) {
-		this.position = new Vector2(x, y);
+	constructor({ x, y, bot, color }: { x?: number; y?: number; bot?: boolean; color?: string } = {}) {
+		this.position = new Vector2(x || 0, y || 0);
 
 		// Variables
 		this.velocity = new Vector2(0, 0);
@@ -45,9 +46,10 @@ export class Car {
 		this.drag_coefficient = 4;
 
 		this.color = color || "red";
+		this.is_bot = bot || false;
 
 		// -------- Raycast --------
-		this.debugView = false; // Change this
+		this.debugView = true; // Change this
 
 		this.raycastAngles = [];
 		for (let i = -1.3; i < 1.3; i += 0.2) this.raycastAngles.push(i);
@@ -85,29 +87,30 @@ export class Car {
 				const trackSegmentPoints: Point[] = [globalThis.game.track.trackCoordsToPoint(path[i - 1]), globalThis.game.track.trackCoordsToPoint(path[i])];
 
 				const m = intersection(a, b, trackSegmentPoints[0], trackSegmentPoints[1]);
-				if (m) {
-					m.display("brown");
-					game_over = true;
-					// break intersection_detected;
-				}
+				if (m)
+					if (this.debugView) {
+						m.display("brown");
+						game_over = true;
+						// break intersection_detected;
+					}
 
 				const n = intersection(b, c, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (n) {
-					n.display("brown");
+					if (this.debugView) n.display("brown");
 					game_over = true;
 					// break intersection_detected;
 				}
 
 				const o = intersection(c, d, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (o) {
-					o.display("brown");
+					if (this.debugView) o.display("brown");
 					game_over = true;
 					// break intersection_detected;
 				}
 
 				const p = intersection(d, a, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (p) {
-					p.display("brown");
+					if (this.debugView) p.display("brown");
 					game_over = true;
 					// break intersection_detected;
 				}

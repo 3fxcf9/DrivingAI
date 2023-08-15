@@ -42,7 +42,7 @@ class Game {
 			false
 		);
 		// Init classes
-		this.car = new Car(0, 0);
+		this.car = new Car({ x: 0, y: 0, bot: false });
 		this.track = new Track();
 
 		// Launch the game

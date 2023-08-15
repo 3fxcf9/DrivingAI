@@ -20,17 +20,23 @@ export class Car {
 	color: string;
 	is_bot: boolean;
 
-	// Raycast
-	debugView: boolean;
+	// Debug
+	debugRaysView: boolean;
+	debugVectorView: boolean;
+	debugPopupView: boolean;
+	debugCtx: CanvasRenderingContext2D | null; // Debug raycast view
 
 	raycastAngles: number[];
 
-	debugCtx: CanvasRenderingContext2D | null; // Debug raycast view
-
 	constructor({ x, y, bot, color }: { x?: number; y?: number; bot?: boolean; color?: string } = {}) {
-		this.position = new Vector2(x || 0, y || 0);
+		// -------- Debug --------
+		this.debugRaysView = true; // Change this
+		this.debugPopupView = false; // Change this
+		this.debugVectorView = false; // Change this
 
+		// -------- Physics --------
 		// Variables
+		this.position = new Vector2(x || 0, y || 0);
 		this.velocity = new Vector2(0, 0);
 		this.heading = 0;
 		this.wheels_angle = 0;
@@ -49,16 +55,14 @@ export class Car {
 		this.is_bot = bot || false;
 
 		// -------- Raycast --------
-		this.debugView = true; // Change this
-
 		this.raycastAngles = [];
 		for (let i = -1.3; i < 1.3; i += 0.2) this.raycastAngles.push(i);
 
 		// Debug raycast view
 		this.debugCtx = null;
-		if (this.debugView) {
+		if (this.debugPopupView) {
 			const debugPopup = window.open("", "Car view", "width=400,height=500");
-			if (!debugPopup) this.debugView = false;
+			if (!debugPopup) this.debugPopupView = false;
 			else {
 				debugPopup.document.body.style.margin = "0";
 				const debugCanvas = debugPopup.document.createElement("canvas");
@@ -87,32 +91,35 @@ export class Car {
 				const trackSegmentPoints: Point[] = [globalThis.game.track.trackCoordsToPoint(path[i - 1]), globalThis.game.track.trackCoordsToPoint(path[i])];
 
 				const m = intersection(a, b, trackSegmentPoints[0], trackSegmentPoints[1]);
-				if (m)
-					if (this.debugView) {
+				if (m) {
+					game_over = true;
+					if (this.debugRaysView) {
 						m.display("brown");
-						game_over = true;
-						// break intersection_detected;
-					}
+					} else break intersection_detected;
+				}
 
 				const n = intersection(b, c, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (n) {
-					if (this.debugView) n.display("brown");
 					game_over = true;
-					// break intersection_detected;
+					if (this.debugRaysView) {
+						n.display("brown");
+					} else break intersection_detected;
 				}
 
 				const o = intersection(c, d, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (o) {
-					if (this.debugView) o.display("brown");
 					game_over = true;
-					// break intersection_detected;
+					if (this.debugRaysView) {
+						o.display("brown");
+					} else break intersection_detected;
 				}
 
 				const p = intersection(d, a, trackSegmentPoints[0], trackSegmentPoints[1]);
 				if (p) {
-					if (this.debugView) p.display("brown");
 					game_over = true;
-					// break intersection_detected;
+					if (this.debugRaysView) {
+						p.display("brown");
+					} else break intersection_detected;
 				}
 			}
 		}
@@ -156,7 +163,7 @@ export class Car {
 		}
 
 		// Display rays and intersection points
-		if (this.debugView) {
+		if (this.debugRaysView) {
 			for (const { p } of distances) {
 				if (!p) continue;
 
@@ -166,7 +173,7 @@ export class Car {
 		}
 
 		// Debug raycast view
-		if (this.debugView) {
+		if (this.debugPopupView) {
 			const rectWidth = Math.round(this.debugCtx!.canvas.width / distances.length);
 			const rectHeights = distances.map(({ d }) => {
 				return { h: this.debugCtx!.canvas.height / (d + 1) ** 2, c: 255 / (d + 1) ** 2 + 20 };
@@ -263,11 +270,13 @@ export class Car {
 		this.heading = this.velocity.angle;
 
 		// Debug
-		// headingUnitVector.multiply(5).display(ctx, this.position.x, this.position.y, "white");
-		// this.velocity.copy().multiply(5).display(ctx, this.position.x, this.position.y, "yellow");
-		// forces.multiply(50).display(ctx, this.position.x, this.position.y, "green");
-		// drag.multiply(5).display(ctx, this.position.x, this.position.y, "red");
-		// lateral.copy().multiply(50).display(ctx, this.position.x, this.position.y, "violet");
+		if (this.debugVectorView) {
+			headingUnitVector.multiply(5).display(this.position.x, this.position.y, "white");
+			this.velocity.copy().multiply(5).display(this.position.x, this.position.y, "yellow");
+			forces.multiply(50).display(this.position.x, this.position.y, "green");
+			drag.multiply(5).display(this.position.x, this.position.y, "red");
+			lateral.copy().multiply(5).display(this.position.x, this.position.y, "violet");
+		}
 
 		this.drawCar();
 		this.raycast();

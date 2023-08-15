@@ -202,13 +202,24 @@ export class Car {
 		globalThis.game.reset();
 	}
 
-	render(delta: number) {
+	checkControls(controls?: [number, number, number, number]) {
+		return [
+			controls?.[0] || globalThis.game.keys.has("KeyW"),
+			controls?.[1] || globalThis.game.keys.has("KeyA"),
+			controls?.[2] || globalThis.game.keys.has("KeyD"),
+			controls?.[3] || globalThis.game.keys.has("KeyS"),
+		];
+	}
+
+	render(delta: number, controls?: [number, number, number, number]) {
+		const [upPressed, leftPressed, rightPressed, downPressed] = this.checkControls(controls);
+
 		let forces = Vector2.NULL();
 		const headingUnitVector = Vector2.UNIT().setAngle(this.heading);
 
 		// Forward
 		let acceleration = Vector2.NULL();
-		if (globalThis.game.keys.has("KeyW")) {
+		if (upPressed) {
 			acceleration = headingUnitVector.copy().multiply(this.acceleration);
 		}
 
@@ -218,7 +229,7 @@ export class Car {
 			.multiply(-1)
 			.multiply(this.drag_hardness * this.velocity.magnitude ** 2 * this.drag_coefficient);
 
-		if (globalThis.game.keys.has("KeyS")) {
+		if (downPressed) {
 			drag.add(
 				headingUnitVector
 					.copy()
@@ -229,11 +240,11 @@ export class Car {
 
 		// Left
 		this.wheels_angle = 0;
-		if (globalThis.game.keys.has("KeyA")) {
+		if (leftPressed) {
 			this.wheels_angle = -this.wheel_rotation_angle;
 		}
 		// Right
-		if (globalThis.game.keys.has("KeyD")) {
+		if (rightPressed) {
 			this.wheels_angle = this.wheel_rotation_angle;
 		}
 

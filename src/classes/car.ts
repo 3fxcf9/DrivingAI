@@ -167,8 +167,6 @@ export class Car {
 
 		// Debug raycast view
 		if (this.debugView) {
-			console.log(this.debugCtx);
-
 			const rectWidth = Math.round(this.debugCtx!.canvas.width / distances.length);
 			const rectHeights = distances.map(({ d }) => {
 				return { h: this.debugCtx!.canvas.height / (d + 1) ** 2, c: 255 / (d + 1) ** 2 + 20 };
